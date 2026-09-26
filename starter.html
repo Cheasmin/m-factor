@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RC M-Factor Calculator - ASCE 41-17</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23342700'/%3E%3Cpath d='M10 43V19h9l7 13 7-13h9v24h-8V31l-6 11h-4l-6-11v12z' fill='%23ffd54a'/%3E%3Cpath d='M45 18h9v6h-9zM45 28h9v17h-9z' fill='%23fff4cf'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#2f280f;--muted:#74694b;--paper:#fffdf6;--ground:#fff8df;
+    --green-950:#342700;--green-900:#4e3900;--green-800:#765300;--green-700:#a87300;
+    --green-500:#d8a600;--green-200:#efdc91;--green-100:#fff0ad;--green-50:#fffaf0;
+    --line:#e5d397;--blue:#355f75;--blue-bg:#eaf6fb;--amber:#8b5b00;--amber-bg:#fff0bd;
+    --red:#a62222;--red-bg:#fdeaea;--teal:#0c6d63;--teal-bg:#e6f6f2;
+    --shadow:0 8px 28px rgba(86,62,0,.12);--sans:"Segoe UI",Roboto,Arial,sans-serif;
+    --mono:"Cascadia Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+  button,input,select{font:inherit}
+  a{color:var(--green-800)}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;min-height:58px;padding:0 22px;background:var(--green-950);color:white;box-shadow:0 2px 8px rgba(0,0,0,.22)}
+  .brand{min-width:270px;font-size:16px;font-weight:750;letter-spacing:.01em}
+  .brand small{display:block;color:#ffe08a;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+  .tabs{display:flex;align-self:stretch;gap:3px;overflow:auto}
+  .tab{border:0;border-bottom:3px solid transparent;background:transparent;color:#f5e7b1;padding:0 14px;white-space:nowrap;cursor:pointer}
+  .tab:hover{color:white;background:rgba(255,255,255,.05)}
+  .tab.active{color:white;border-bottom-color:#ffd54a;font-weight:700;background:rgba(255,213,74,.08)}
+  .top-actions{display:flex;gap:7px;margin-left:auto}
+  .top-actions button{border:1px solid #9b771f;border-radius:5px;background:#5a4200;color:white;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  .top-actions button:hover{background:#7a5900}
+  main{max-width:1460px;margin:0 auto;padding:20px}
+  .page{display:none}.page.active{display:block}
+  h1,h2,h3{margin:0;color:var(--green-950)}h1{font-size:25px;line-height:1.25}h2{font-size:18px}h3{font-size:14px}
+  p{margin:6px 0 10px}
+  .hero{display:grid;grid-template-columns:1.45fr .8fr;gap:14px;margin-bottom:14px}
+  .hero-copy,.scope-card,.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 8px rgba(20,60,32,.035)}
+  .hero-copy{padding:18px 20px;border-left:5px solid var(--green-700)}
+  .hero-copy .eyebrow,.eyebrow{font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:5px}
+  .hero-copy p{max-width:95ch;color:#534a2e}
+  .scope-card{padding:15px 17px}.scope-card ul{margin:7px 0 0;padding-left:19px}.scope-card li{margin:3px 0}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;background:var(--green-50);padding:2px 8px;color:var(--green-800);font-size:11px;font-weight:700}
+  .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green-500)}
+  .layout{display:grid;grid-template-columns:minmax(335px,430px) 1fr;gap:14px;align-items:start}.stack{display:grid;gap:14px}
+  .card{padding:15px 17px;min-width:0}.card-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.card-title small{color:var(--muted)}
+  .section-no{font:700 11px var(--mono);color:var(--green-700);background:var(--green-100);border-radius:4px;padding:3px 6px;margin-right:7px}
+  .inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  label{display:flex;flex-direction:column;gap:4px;color:#574d2f;font-size:11.5px}label.wide{grid-column:1/-1}
+  input[type="number"],input[type="text"],select{width:100%;height:36px;border:1px solid #d6bd6c;border-radius:5px;background:#fffefa;color:var(--ink);padding:0 9px}
+  input:focus,select:focus{outline:3px solid #fff0ad;border-color:var(--green-700)}
+  .unit{position:relative}.unit input{padding-right:58px}.unit span{position:absolute;right:9px;bottom:8px;color:var(--muted);font-size:11px;pointer-events:none}
+  .hint{font-size:11px;color:var(--muted);margin-top:7px}.tiny{font-size:10.5px;color:var(--muted)}
+  .checklist{display:grid;gap:7px;margin-top:8px}.check-row{display:flex;align-items:flex-start;gap:8px;border:1px solid #eadfb9;border-radius:5px;background:#fffaf0;padding:8px 9px}.check-row input{margin-top:3px}.check-row span{font-size:12px}.check-row b{display:block;color:var(--green-950)}
+  .notice{border-left:4px solid var(--blue);background:var(--blue-bg);padding:10px 12px;border-radius:5px;color:#28495f;margin:10px 0}.notice.warn{border-left-color:var(--amber);background:var(--amber-bg);color:#69420a}.notice.fail{border-left-color:var(--red);background:var(--red-bg);color:#7d2020}.notice.good{border-left-color:var(--teal);background:var(--teal-bg);color:#125b54}
+  .results-grid{display:grid;grid-template-columns:repeat(4,minmax(145px,1fr));gap:9px}.metric{border:1px solid var(--line);border-radius:6px;background:var(--green-50);padding:9px 10px;min-height:78px}.metric .label{color:var(--muted);font-size:11px}.metric strong{display:block;color:var(--green-950);font-size:21px;line-height:1.25;margin-top:3px}.metric small{display:block;color:#52635a;font-size:10.5px;margin-top:2px}.metric.ok{background:var(--teal-bg);border-color:#9cd2c9}.metric.warn{background:var(--amber-bg);border-color:#e4bf82}.metric.fail{background:var(--red-bg);border-color:#e1a7a7}
+  .summary{display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line);border-radius:7px;background:var(--green-50);margin-bottom:11px}.summary .lamp{width:17px;height:17px;border-radius:50%;background:var(--green-500);box-shadow:0 0 0 5px #fff0ad;flex:none}.summary.ok{background:var(--teal-bg);border-color:#9cd2c9}.summary.ok .lamp{background:var(--teal);box-shadow:0 0 0 5px #caebe5}.summary.fail{background:var(--red-bg);border-color:#e1a7a7}.summary.fail .lamp{background:var(--red);box-shadow:0 0 0 5px #f7d1d1}.summary.warn{background:var(--amber-bg);border-color:#e4bf82}.summary.warn .lamp{background:#d08616;box-shadow:0 0 0 5px #f5dfb8}.summary strong{font-size:16px;color:var(--green-950)}.summary span{display:block;color:#615638;font-size:12px}
+  .component-panel{display:none}.component-panel.active{display:block}
+  table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 8px;border-bottom:1px solid #eadfb9;text-align:left;vertical-align:top}th{background:var(--green-100);color:var(--green-950);font-weight:700;white-space:nowrap}td.num,th.num{text-align:right;font-family:var(--mono)}tr:hover td{background:#fff9e6}
+  .status{display:inline-block;border-radius:4px;padding:2px 7px;font-size:10.5px;font-weight:750;letter-spacing:.02em}.status.ok{background:#d9f0eb;color:#0b5e55}.status.fail{background:#f8d9d9;color:#8c1e1e}.status.warn{background:#f8e8c9;color:#815005}
+  .equations{display:grid;gap:7px}.eq{display:grid;grid-template-columns:165px 1fr;gap:10px;border-left:3px solid #e0b632;background:var(--green-50);padding:8px 10px;font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}.eq b{color:var(--green-900)}.eq span{color:#554b2f}
+  .bar-chart{margin:14px 0 7px}.bar-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-size:12px}.track{position:relative;height:31px;background:#f2ead0;border:1px solid #dfcd91;border-radius:4px;overflow:visible}.fill{height:100%;width:0;background:var(--teal);border-radius:3px 0 0 3px;transition:width .25s ease}.fill.fail{background:var(--red)}.limit{position:absolute;top:-7px;bottom:-7px;left:66.666%;border-left:2px dashed #b76900}.limit::before{content:"1.00";position:absolute;bottom:36px;left:-15px;color:#9a5a00;font:10px var(--mono)}
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.flow-item{position:relative;border:1px solid var(--line);border-radius:6px;background:var(--green-50);padding:10px;min-height:86px}.flow-item:not(:last-child)::after{content:"→";position:absolute;right:-14px;top:30px;z-index:2;color:var(--green-700);font-weight:900;font-size:17px}.flow-item b{display:block;color:var(--green-900);font-size:12px}.flow-item span{font-size:11px;color:var(--muted)}
+  .source-box{display:grid;grid-template-columns:1fr 1fr;gap:12px}.kicker{margin:17px 0 8px;color:var(--green-800);font:800 11px var(--mono);text-transform:uppercase;letter-spacing:.08em}.ref-table td:first-child{white-space:nowrap;font-family:var(--mono);font-weight:700;color:var(--green-800)}
+  .presentation-board{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}.decision{border:2px solid var(--green-500);background:linear-gradient(135deg,#fff8d5,#fffdf6);padding:16px 18px;border-radius:8px}.decision.ok{border-color:var(--teal);background:var(--teal-bg)}.decision.fail{border-color:var(--red);background:var(--red-bg)}.hero-number{font-size:48px;line-height:1;font-weight:800;color:var(--green-900)}.hero-number small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .copy-row{display:flex;justify-content:flex-end;margin-top:8px}.btn{border:1px solid var(--green-700);border-radius:5px;background:var(--green-800);color:white;padding:7px 11px;cursor:pointer}.btn:hover{background:var(--green-700)}.btn.secondary{background:white;color:var(--green-800)}
+  footer{max-width:1460px;margin:0 auto;padding:0 20px 24px;color:var(--muted);font-size:11px}
+  .presenting main{max-width:1780px;padding:26px}.presenting .topbar{min-height:66px}.presenting .card,.presenting .hero-copy,.presenting .scope-card{box-shadow:var(--shadow)}
+  @media(max-width:1080px){.hero,.layout,.source-box,.presentation-board{grid-template-columns:1fr}.results-grid{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr 1fr}.flow-item:nth-child(2)::after{display:none}.topbar{align-items:flex-start;flex-wrap:wrap;padding-top:8px}.top-actions{margin-left:0}.tabs{order:3;width:100%;height:44px}.tab{height:44px}}
+  @media(max-width:650px){main{padding:12px}.inputs,.results-grid,.flow{grid-template-columns:1fr}.flow-item::after{display:none!important}.top-actions{display:none}.brand{min-width:0}.eq{grid-template-columns:1fr}.limit{left:66.666%}}
+  @media print{.topbar,.no-print{display:none!important}body{background:white}.page{display:block!important}main{max-width:none;padding:0}.card,.hero-copy,.scope-card{box-shadow:none;break-inside:avoid}.page[data-page="basis"],.page[data-page="summary-page"]{page-break-before:always}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">RC m-Factor Calculator<small>ASCE/SEI 41-17 · linear procedures · Rev 0</small></div>
+  <nav class="tabs" aria-label="Calculator pages">
+    <button class="tab active" data-page-target="calculator">1 Component &amp; result</button>
+    <button class="tab" data-page-target="application">2 Capacity application</button>
+    <button class="tab" data-page-target="basis">3 Code basis</button>
+    <button class="tab" data-page-target="summary-page">4 Presentation summary</button>
+  </nav>
+  <div class="top-actions">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="copyBtn" type="button">Copy summary</button>
+    <button id="presentBtn" type="button">Present</button>
+  </div>
+</header>
+
+<main>
+  <section class="page active" data-page="calculator">
+    <div class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Existing RC moment frames</div>
+        <h1>Select and interpolate the ASCE 41 m-factor</h1>
+        <p>For linear static or linear dynamic evaluation of reinforced-concrete beam-column moment frames. The engine implements ASCE/SEI 41-17 Tables 10-10a, 10-10b, 10-13, and 10-14, including interpolation and the governing-minimum rule.</p>
+        <div class="notice warn"><b>Procedure boundary:</b> m-factors apply only to deformation-controlled actions evaluated by linear procedures. Nonlinear procedures require the applicable modeling parameters and deformation acceptance criteria; m is not used as a strength multiplier.</div>
+      </div>
+      <aside class="scope-card">
+        <span class="badge">Edition locked: ASCE 41-17</span>
+        <h2 style="margin-top:8px">Verified scope</h2>
+        <ul>
+          <li>RC beams: Table 10-13</li>
+          <li>RC columns: Tables 10-10a and 10-10b</li>
+          <li>RC beam-column joints: Table 10-14</li>
+          <li>Linear acceptance: Section 7.5.2.2.1</li>
+        </ul>
+        <p class="tiny">Not a steel, masonry, wall, diaphragm, foundation, or nonlinear-hinge calculator.</p>
+      </aside>
+    </div>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="card">
+          <div class="card-title"><h2><span class="section-no">01</span>Analysis classification</h2><small>required</small></div>
+          <div class="inputs">
+            <label class="wide"><span>Calculation title</span><input id="titleInput" type="text" value="Existing RC frame component"></label>
+            <label><span>Procedure</span><select id="procedure"><option value="LSP">LSP - linear static</option><option value="LDP">LDP - linear dynamic</option><option value="NSP">NSP - nonlinear static</option><option value="NDP">NDP - nonlinear dynamic</option></select></label>
+            <label><span>Component</span><select id="component"><option value="beam">RC beam</option><option value="column">RC column</option><option value="joint">Beam-column joint</option></select></label>
+            <label><span>Performance / role</span><select id="target"><option value="PIO">Primary - IO</option><option value="PLS" selected>Primary - LS</option><option value="PCP">Primary - CP</option><option value="SLS">Secondary - LS</option><option value="SCP">Secondary - CP</option></select></label>
+            <label><span>Knowledge factor, κ</span><select id="kappa"><option value="0.75">0.75</option><option value="0.9">0.90</option><option value="1" selected>1.00</option></select></label>
+          </div>
+          <p class="hint">The tool selects m only. κ must come from the approved data-collection program under ASCE 41 Section 6.2.4.</p>
+        </section>
+
+        <section id="beamPanel" class="card component-panel active">
+          <div class="card-title"><h2><span class="section-no">02A</span>Beam conditions</h2><small>Table 10-13</small></div>
+          <div class="checklist">
+            <label class="check-row"><input id="modeFlexure" type="checkbox" checked><span><b>Flexure controlled</b>Uses reinforcement ratio, transverse reinforcement, and normalized shear.</span></label>
+            <label class="check-row"><input id="modeShear" type="checkbox"><span><b>Shear controlled</b>Uses stirrup spacing relative to effective depth.</span></label>
+            <label class="check-row"><input id="modeDevelopment" type="checkbox"><span><b>Inadequate development / splice along span</b>Uses stirrup spacing relative to effective depth.</span></label>
+            <label class="check-row"><input id="modeEmbedment" type="checkbox"><span><b>Inadequate embedment into beam-column joint</b>Uses the fixed row in Table 10-13.</span></label>
+          </div>
+          <div class="inputs" style="margin-top:10px">
+            <label><span>(ρ - ρ') / ρ<sub>bal</sub></span><input id="beamRhoRatio" type="number" step="0.01" value="0.00"></label>
+            <label><span>Metric normalized shear</span><input id="beamShearRatio" type="number" step="0.01" value="0.25"></label>
+            <label><span>Transverse reinforcement</span><select id="beamTransverse"><option value="C" selected>C - conforming</option><option value="NC">NC - nonconforming</option></select></label>
+            <label><span>Stirrup spacing condition</span><select id="beamStirrup"><option value="tight" selected>s ≤ d/2</option><option value="loose">s &gt; d/2</option></select></label>
+          </div>
+          <p class="hint">Metric normalized shear = V / (b<sub>w</sub>d√f'<sub>cE</sub>), using the MPa thresholds 0.25 and 0.50 shown parenthetically in Table 10-13. Values between table limits are linearly interpolated.</p>
+        </section>
+
+        <section id="columnPanel" class="card component-panel">
+          <div class="card-title"><h2><span class="section-no">02B</span>Column conditions</h2><small>Tables 10-10a/b</small></div>
+          <div class="inputs">
+            <label class="wide"><span>Column table</span><select id="columnShape"><option value="other">Other than qualifying circular spiral / seismic hoops</option><option value="circular">Circular with spiral reinforcement or seismic hoops</option></select></label>
+            <label><span>Development / splice control</span><select id="columnDevelopment"><option value="no" selected>Not controlled</option><option value="yes">Controlled by inadequate development/splice</option></select></label>
+            <label><span>N<sub>UD</sub> / (A<sub>g</sub>f'<sub>cE</sub>)</span><input id="columnAxial" type="number" step="0.01" value="0.10"></label>
+            <label><span>Transverse ratio, ρ<sub>t</sub></span><input id="columnRho" type="number" step="0.0001" value="0.0175"></label>
+            <label><span>V<sub>yE</sub> / V<sub>ColOE</sub></span><input id="columnShear" type="number" step="0.05" value="0.20"></label>
+          </div>
+          <p class="hint">Interpolation is performed over the listed axial-ratio, transverse-ratio, and shear-ratio breakpoints. For inadequate development/splicing, the result is capped so it never exceeds the corresponding non-development-controlled value.</p>
+        </section>
+
+        <section id="jointPanel" class="card component-panel">
+          <div class="card-title"><h2><span class="section-no">02C</span>Joint conditions</h2><small>Table 10-14</small></div>
+          <div class="inputs">
+            <label><span>Joint classification</span><select id="jointClass"><option value="interior">Condition i - interior</option><option value="other">Condition ii - other joint</option></select></label>
+            <label><span>Transverse reinforcement</span><select id="jointTransverse"><option value="C">C - conforming</option><option value="NC">NC - nonconforming</option></select></label>
+            <label><span>P / (A<sub>g</sub>f'<sub>cE</sub>)</span><input id="jointAxial" type="number" step="0.05" value="0.10"></label>
+            <label><span>V / V<sub>J</sub></span><input id="jointShear" type="number" step="0.05" value="1.20"></label>
+          </div>
+          <p class="hint">C means hoops spaced at s ≤ h<sub>c</sub>/2 within the joint. Values between axial-ratio 0.10 and 0.40 and shear-ratio 1.20 and 1.50 are linearly interpolated where the tabulated m-value changes.</p>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div id="summary" class="summary"><span class="lamp"></span><div><strong id="summaryTitle">m = -</strong><span id="summaryText">Enter the component classification.</span></div></div>
+          <div class="results-grid">
+            <div id="metricM" class="metric"><span class="label">Selected m-factor</span><strong id="mOut">-</strong><small id="tableOut">ASCE 41-17</small></div>
+            <div id="metricRaw" class="metric"><span class="label">Raw DCR</span><strong id="rawDcrOut">-</strong><small>Q<sub>UD</sub> / (κQ<sub>CE</sub>)</small></div>
+            <div id="metricAdjusted" class="metric"><span class="label">m-adjusted DCR</span><strong id="adjustedDcrOut">-</strong><small>Q<sub>UD</sub> / (mκQ<sub>CE</sub>)</small></div>
+            <div id="metricCapacity" class="metric"><span class="label">Modified capacity</span><strong id="capacityOut">-</strong><small>mκQ<sub>CE</sub></small></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-title"><h2>Selection trace</h2><small>live</small></div>
+          <table><thead><tr><th>Item</th><th>Value</th><th>Effect</th></tr></thead><tbody id="traceBody"></tbody></table>
+        </section>
+
+        <section class="card">
+          <div class="card-title"><h2>Governing table row(s)</h2><small>minimum controls</small></div>
+          <table><thead><tr><th>Candidate condition</th><th class="num">m</th><th>Basis</th></tr></thead><tbody id="candidateBody"></tbody></table>
+        </section>
+
+        <section class="card">
+          <div class="card-title"><h2>Interpolation position</h2><small>clamped at table bounds</small></div>
+          <div class="bar-chart"><div class="bar-head"><span>m-adjusted demand / capacity</span><b id="chartLabel">D/C = -</b></div><div class="track"><div id="dcFill" class="fill"></div><div class="limit"></div></div></div>
+          <p id="interpolationText" class="hint">-</p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" data-page="application">
+    <div class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Linear acceptance check</div>
+        <h1>Apply m to expected component strength</h1>
+        <p>For deformation-controlled actions in LSP/LDP, ASCE 41-17 Eq. (7-36) compares demand Q<sub>UD</sub> with mκQ<sub>CE</sub>. This page shows both common DCR formats so the review trail is explicit.</p>
+      </div>
+      <aside class="scope-card"><h2>Do not mix classifications</h2><ul><li>m applies to deformation-controlled actions.</li><li>Force-controlled actions use lower-bound strength and no m.</li><li>NSP/NDP use deformation limits, not linear m-values.</li></ul></aside>
+    </div>
+    <div class="layout">
+      <div class="stack">
+        <section class="card">
+          <div class="card-title"><h2><span class="section-no">03</span>Demand and expected strength</h2><small>consistent force units</small></div>
+          <div class="inputs">
+            <label><span>Expected strength, Q<sub>CE</sub></span><div class="unit"><input id="qce" type="number" min="0" step="1" value="100"><span>units</span></div></label>
+            <label><span>Deformation-controlled demand, Q<sub>UD</sub></span><div class="unit"><input id="qud" type="number" min="0" step="1" value="180"><span>units</span></div></label>
+          </div>
+          <div id="capacityNotice" class="notice" style="margin-top:12px">-</div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Calculation chain</h2><small>ASCE 41-17</small></div>
+          <div id="equationList" class="equations"></div>
+        </section>
+      </div>
+      <div class="stack">
+        <section class="card">
+          <h2>Workflow</h2>
+          <div class="flow">
+            <div class="flow-item"><b>1 Classify action</b><span>Confirm deformation-controlled behavior and LSP/LDP use.</span></div>
+            <div class="flow-item"><b>2 Select m</b><span>Use the applicable component table and interpolate.</span></div>
+            <div class="flow-item"><b>3 Apply κ</b><span>Use the component-specific knowledge factor from data collection.</span></div>
+            <div class="flow-item"><b>4 Compare</b><span>Check QUD against mκQCE and document the governing row.</span></div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Procedure selection guidance</h2><small>important</small></div>
+          <table><thead><tr><th>Analysis procedure</th><th>Use in ASCE 41 review</th></tr></thead><tbody>
+            <tr><td>Linear Static Procedure (LSP)</td><td>The m-factor may be used in the component acceptance check when all applicable LSP requirements are satisfied.</td></tr>
+            <tr><td>Linear Dynamic Procedure (LDP)</td><td>The m-factor may be used in the component acceptance check when all applicable LDP requirements are satisfied.</td></tr>
+            <tr><td>Nonlinear Static or Dynamic Procedure</td><td>Use the applicable nonlinear modeling parameters and deformation acceptance criteria; m is not used as a strength or ductility multiplier.</td></tr>
+          </tbody></table>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" data-page="basis">
+    <div class="hero-copy">
+      <div class="eyebrow">Reference index basis</div>
+      <h1>Clauses, tables, assumptions, and edition limits</h1>
+      <p>The numerical engine is transcribed from the indexed ASCE/SEI 41-17 PDF. NSCP 2015 is listed as local project-code context, but it does not replace the ASCE 41 component m-factor tables implemented here.</p>
+    </div>
+    <div class="kicker">Primary provisions implemented</div>
+    <section class="card" style="overflow:auto">
+      <table class="ref-table"><thead><tr><th>Reference</th><th>Use in this calculator</th><th>Vault PDF location</th></tr></thead><tbody>
+        <tr><td>ASCE 41-17 §7.5.1.5.2</td><td>Linear deformation-controlled capacity is the product of m, κ, and Q<sub>CE</sub>.</td><td>PDF p. 125; printed p. 78</td></tr>
+        <tr><td>ASCE 41-17 §7.5.2.2.1 / Eq. 7-36</td><td>Acceptance check mκQ<sub>CE</sub> &gt; Q<sub>UD</sub>.</td><td>PDF p. 126; printed p. 79</td></tr>
+        <tr><td>ASCE 41-17 Table 10-10a</td><td>Noncircular RC column m-factors; linear interpolation.</td><td>PDF p. 202; printed p. 155</td></tr>
+        <tr><td>ASCE 41-17 Table 10-10b</td><td>Qualifying circular RC column m-factors; linear interpolation.</td><td>PDF p. 203; printed p. 156</td></tr>
+        <tr><td>ASCE 41-17 Table 10-13</td><td>RC beam m-factors; minimum applicable condition governs.</td><td>PDF p. 205; printed p. 158</td></tr>
+        <tr><td>ASCE 41-17 Table 10-14</td><td>RC beam-column joint m-factors; linear interpolation.</td><td>PDF p. 206; printed p. 159</td></tr>
+        <tr><td>ASCE 41-17 Tables 10-7 to 10-11</td><td>Nonlinear modeling and acceptance parameters; referenced for procedure boundaries but not calculated here.</td><td>PDF pp. 197-204; printed pp. 150-157</td></tr>
+      </tbody></table>
+    </section>
+    <div class="source-box" style="margin-top:14px">
+      <section class="card"><h2>Verified facts</h2><ul><li>m is a linear-procedure component capacity modification factor.</li><li>Beam Table 10-13 requires the minimum applicable value when multiple listed conditions occur.</li><li>Table notes require linear interpolation between listed values.</li><li>Column development/splice-controlled values cannot exceed the corresponding non-development-controlled values.</li></ul></section>
+      <section class="card"><h2>Assumptions / limitations</h2><ul><li>Metric beam normalized-shear thresholds use the parenthetical MPa values 0.25 and 0.50.</li><li>Inputs outside table endpoints are held at the applicable endpoint; extrapolation is not performed.</li><li>Component/action classification, expected strength, κ, and demands remain the engineer's responsibility.</li><li>ASCE 41-23 is the current ASCE edition, but this tool is intentionally locked to the indexed 41-17 PDF and must not be treated as a 41-23 implementation.</li></ul></section>
+    </div>
+    <section class="card" style="margin-top:14px">
+      <h2>NSCP and related references</h2>
+      <p><b>NSCP 2015:</b> use as required by the Philippine project basis for local loads, combinations, and new-building provisions. The RC m-values in this tool come from ASCE 41-17, not from the NSCP 2015 beam-flexure provisions.</p>
+      <p><b>ASCE 41-13:</b> retained in the vault as a legacy reference. It is not mixed into this 41-17 numerical engine.</p>
+      <p><b>ACI 318:</b> ASCE 41 references ACI 318 for strength/detailing concepts, but the acceptance m-values remain ASCE 41 values.</p>
+    </section>
+  </section>
+
+  <section class="page" data-page="summary-page">
+    <div class="hero-copy">
+      <div class="eyebrow">Presentation sheet</div>
+      <h1>Component m-factor summary</h1>
+      <p>Reviewer-facing output with the selected component, controlling table row, interpolation inputs, and linear acceptance result.</p>
+    </div>
+    <div class="presentation-board">
+      <section id="presentDecision" class="decision">
+        <div class="eyebrow">Overall linear check</div>
+        <h1 id="presentStatus">-</h1>
+        <p id="presentNarrative">-</p>
+        <div class="results-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+          <div class="metric"><span class="label">m-factor</span><strong id="sumM">-</strong><small>ASCE 41-17</small></div>
+          <div class="metric"><span class="label">mκQ<sub>CE</sub></span><strong id="sumCapacity">-</strong><small>consistent units</small></div>
+          <div class="metric"><span class="label">Adjusted D/C</span><strong id="sumDcr">-</strong><small>limit ≤ 1.00</small></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-title"><h2>Calculation identification</h2><small>editable</small></div>
+        <div class="inputs">
+          <label class="wide"><span>Project</span><input id="projectName" type="text" value="Existing Building Seismic Evaluation"></label>
+          <label><span>Prepared by</span><input id="preparedBy" type="text" value=""></label>
+          <label><span>Checked by</span><input id="checkedBy" type="text" value=""></label>
+          <label><span>Revision</span><input id="revision" type="text" value="0"></label>
+          <label><span>Date</span><input id="calcDate" type="text" value="26 Sep 2026"></label>
+        </div>
+      </section>
+    </div>
+    <div class="source-box" style="margin-top:14px">
+      <section class="card" style="overflow:auto"><div class="card-title"><h2>Selection record</h2><small>live</small></div><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody id="summaryInputsBody"></tbody></table></section>
+      <section class="card" style="overflow:auto"><div class="card-title"><h2>Acceptance record</h2><small>live</small></div><table><thead><tr><th>Quantity</th><th class="num">Value</th><th>Status / basis</th></tr></thead><tbody id="summaryCriteriaBody"></tbody></table></section>
+    </div>
+    <section class="card" style="margin-top:14px"><h2>Reviewer close-out</h2><div class="source-box"><div><h3>Confirm before issue</h3><ul><li>Correct ASCE 41 edition and adopted Performance Objective.</li><li>Component is deformation controlled and within the selected table scope.</li><li>κ, Q<sub>CE</sub>, Q<sub>UD</sub>, and limit-state actions are independently supported.</li></ul></div><div><h3>Items outside this calculator</h3><ul><li>Nonlinear component modeling and cyclic degradation.</li><li>Nonlinear deformation acceptance limits.</li><li>Force-controlled actions and complete load-path checks.</li></ul></div></div></section>
+  </section>
+</main>
+
+<footer>Educational engineering aid. It does not establish code compliance. Final classification, interpolation inputs, analysis, and acceptance require review by the responsible structural engineer.</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const targetIndex = {PIO:0,PLS:1,PCP:2,SLS:3,SCP:4};
+  const targetLabel = {PIO:"Primary - Immediate Occupancy",PLS:"Primary - Life Safety",PCP:"Primary - Collapse Prevention",SLS:"Secondary - Life Safety",SCP:"Secondary - Collapse Prevention"};
+  const defaults = {
+    titleInput:"Existing RC frame component",procedure:"LSP",component:"beam",target:"PLS",kappa:"1",
+    modeFlexure:true,modeShear:false,modeDevelopment:false,modeEmbedment:false,beamRhoRatio:"0.00",beamShearRatio:"0.25",beamTransverse:"C",beamStirrup:"tight",
+    columnShape:"other",columnDevelopment:"no",columnAxial:"0.10",columnRho:"0.0175",columnShear:"0.20",
+    jointClass:"interior",jointTransverse:"C",jointAxial:"0.10",jointShear:"1.20",qce:"100",qud:"180"
+  };
+  const state={};
+  const fmt=(v,d=2)=>Number.isFinite(v)?v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}):"-";
+  const num=id=>Number($(id).value);
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+  const mix=(a,b,t)=>a+(b-a)*t;
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const status=(type,text)=>`<span class="status ${type}">${text}</span>`;
+
+  const beamFlex={
+    C:{r0v0:[3,6,7,6,10],r0v1:[2,3,4,3,5],r1v0:[2,3,4,3,5],r1v1:[2,2,3,2,4]},
+    NC:{r0v0:[2,3,4,3,5],r0v1:[1.25,2,3,2,4],r1v0:[2,3,3,3,4],r1v1:[1.25,2,2,2,3]}
+  };
+  const beamOther={
+    shear:{tight:[1.25,1.5,1.75,3,4],loose:[1.25,1.5,1.75,2,3]},
+    development:{tight:[1.25,1.5,1.75,3,4],loose:[1.25,1.5,1.75,2,3]},
+    embedment:[2,2,3,3,4]
+  };
+
+  const columnRegular={
+    other:[
+      {n0r1:[1.7,3.4,4.2,6.8,8.9],n1r1:[1.2,1.4,1.7,1.4,1.7],n0r0:[1.5,2.6,3.2,2.6,3.2],n1r0:[1,1,1,1,1]},
+      {n0r1:[1.5,2.7,3.3,6.8,8.9],n1r1:[1,1,1,1,1],n0r0:[1.3,1.9,2.3,1.9,2.3],n1r0:[1,1,1,1,1]},
+      {n0r1:[1.3,1.8,2.2,6.8,8.9],n1r1:[1,1,1,1,1],n0r0:[1.1,1,1.1,1.7,2.1],n1r0:[1,1,1,1,1]}
+    ],
+    circular:[
+      {n0r1:[1.7,4.8,6.2,8.9,11.6],n1r1:[1.4,2.1,2.6,2.1,2.6],n0r0:[1.6,3.2,4,3.2,4],n1r0:[1,1,1,1,1]},
+      {n0r1:[1.7,3.7,4.7,8.9,11.6],n1r1:[1.1,1,1.1,1,1.1],n0r0:[1.4,2.1,2.5,2.3,2.8],n1r0:[1,1,1,1,1]},
+      {n0r1:[1.4,2.3,2.9,8.9,11.6],n1r1:[1,1,1,1,1],n0r0:[1,.8,.8,2.3,2.8],n1r0:[1,1,1,1,1]}
+    ]
+  };
+  const columnDevelopment={n0r1:[1,1.7,2,5.3,6.8],n1r1:[1,1,1,2.8,3.5],n0r0:[1,1,1,1.4,1.6],n1r0:[1,1,1,1,1]};
+
+  function beamFlexM(target,transverse,r,v){
+    const tR=clamp(r/0.5,0,1),tV=clamp((v-0.25)/0.25,0,1),g=beamFlex[transverse];
+    const low=mix(g.r0v0[target],g.r1v0[target],tR);
+    const high=mix(g.r0v1[target],g.r1v1[target],tR);
+    return {m:mix(low,high,tV),detail:`Flexure interpolation: r=${fmt(r,3)} within 0.00-0.50; metric shear=${fmt(v,3)} within 0.25-0.50; ${transverse}.`};
+  }
+
+  function columnRegularM(shape,target,n,rho,v){
+    const nT=clamp((n-.1)/.6,0,1),rT=clamp((rho-.0005)/.017,0,1);
+    const nodes=[.2,.6,1];let lo=0,hi=1;
+    if(v>=.6){lo=1;hi=2}
+    const vT=clamp((v-nodes[lo])/(nodes[hi]-nodes[lo]),0,1);
+    const at=node=>{
+      const g=columnRegular[shape][node];
+      const lowR=mix(g.n0r0[target],g.n1r0[target],nT);
+      const highR=mix(g.n0r1[target],g.n1r1[target],nT);
+      return mix(lowR,highR,rT);
+    };
+    return {m:mix(at(lo),at(hi),vT),detail:`Trilinear interpolation at n=${fmt(n,3)}, ρt=${fmt(rho,5)}, VyE/VColOE=${fmt(v,3)}; bounds 0.10-0.70, 0.0005-0.0175, and 0.20-1.00.`};
+  }
+
+  function columnDevelopmentM(target,n,rho){
+    const nT=clamp((n-.1)/.6,0,1),rT=clamp((rho-.0005)/.007,0,1),g=columnDevelopment;
+    const lowR=mix(g.n0r0[target],g.n1r0[target],nT),highR=mix(g.n0r1[target],g.n1r1[target],nT);
+    return {m:mix(lowR,highR,rT),detail:`Bilinear development/splice interpolation at n=${fmt(n,3)} and ρt=${fmt(rho,5)}; bounds 0.10-0.70 and 0.0005-0.0075.`};
+  }
+
+  function jointM(target,jointClass,transverse,n,v){
+    if(target<=2)return {m:1,detail:"Primary joint m-values are 1.0 for IO, LS, and CP in Table 10-14."};
+    const cp=target===4;
+    if(transverse==="C"){
+      const low=cp?4:3,high=cp?3:2,t=clamp((v-1.2)/.3,0,1);
+      return {m:mix(low,high,t),detail:`Conforming-joint interpolation at V/VJ=${fmt(v,3)} between 1.20 and 1.50.`};
+    }
+    if(jointClass==="interior")return {m:cp?3:2,detail:"Interior joint with nonconforming transverse reinforcement; axial and shear table corners have the same m-value."};
+    const low=cp?3:2,high=cp?2:1.5,t=clamp((n-.1)/.3,0,1);
+    return {m:mix(low,high,t),detail:`Other joint, nonconforming reinforcement: axial interpolation at P/(Agf'cE)=${fmt(n,3)} between 0.10 and 0.40.`};
+  }
+
+  function calculateSelection(){
+    const target=$("target").value,ti=targetIndex[target],component=$("component").value,procedure=$("procedure").value;
+    const candidates=[];let detail="",table="",errors=[];
+    if(procedure==="NSP"||procedure==="NDP")errors.push("m-factor is not applicable to nonlinear procedures");
+    if(component==="beam"){
+      table="Table 10-13";
+      if($("modeFlexure").checked){const x=beamFlexM(ti,$("beamTransverse").value,num("beamRhoRatio"),num("beamShearRatio"));candidates.push({name:"Flexure controlled",m:x.m,basis:x.detail})}
+      if($("modeShear").checked){const x=beamOther.shear[$("beamStirrup").value][ti];candidates.push({name:"Shear controlled",m:x,basis:`Stirrup spacing ${$("beamStirrup").value==="tight"?"≤":"&gt;"} d/2.`})}
+      if($("modeDevelopment").checked){const x=beamOther.development[$("beamStirrup").value][ti];candidates.push({name:"Inadequate development / splice",m:x,basis:`Stirrup spacing ${$("beamStirrup").value==="tight"?"≤":"&gt;"} d/2.`})}
+      if($("modeEmbedment").checked){candidates.push({name:"Inadequate joint embedment",m:beamOther.embedment[ti],basis:"Fixed Table 10-13 condition iv."})}
+      if(!candidates.length)errors.push("select at least one applicable beam condition");
+      detail=candidates.length?candidates.reduce((a,b)=>a.m<=b.m?a:b).basis:"-";
+    }else if(component==="column"){
+      const shape=$("columnShape").value,n=num("columnAxial"),rho=num("columnRho"),v=num("columnShear");
+      table=shape==="circular"?"Table 10-10b":"Table 10-10a";
+      const regular=columnRegularM(shape,ti,n,rho,v);
+      candidates.push({name:"Not development/splice controlled",m:regular.m,basis:regular.detail});
+      if($("columnDevelopment").value==="yes"){
+        const dev=columnDevelopmentM(ti,n,rho),governing=Math.min(dev.m,regular.m);
+        candidates.push({name:"Inadequate development / splice",m:governing,basis:`${dev.detail} Capped by corresponding regular value ${fmt(regular.m,3)}.`});
+      }
+      detail=candidates[candidates.length-1].basis;
+    }else{
+      table="Table 10-14";
+      const x=jointM(ti,$("jointClass").value,$("jointTransverse").value,num("jointAxial"),num("jointShear"));
+      candidates.push({name:"Beam-column joint",m:x.m,basis:x.detail});detail=x.detail;
+    }
+    const m=candidates.length?Math.min(...candidates.map(x=>x.m)):NaN;
+    return {m,candidates,detail,table,errors,target,ti,component,procedure};
+  }
+
+  function calculate(){
+    const sel=calculateSelection(),k=num("kappa"),qce=num("qce"),qud=num("qud"),errors=[...sel.errors];
+    if(!(qce>0))errors.push("QCE must be greater than zero");if(qud<0)errors.push("QUD cannot be negative");
+    const capacity=sel.m*k*qce,rawDcr=qud/(k*qce),adjustedDcr=qud/capacity;
+    const valid=errors.length===0&&Number.isFinite(adjustedDcr),pass=valid&&adjustedDcr<=1;
+    Object.assign(state,sel,{k,qce,qud,capacity,rawDcr,adjustedDcr,errors,valid,pass,title:$("titleInput").value.trim()||"Untitled component"});
+    render();
+  }
+
+  function metricClass(id,kind){$(id).className=`metric ${kind}`}
+  function render(){
+    const s=state;
+    $("mOut").textContent=fmt(s.m,3);$("tableOut").textContent=s.table;$("rawDcrOut").textContent=fmt(s.rawDcr,3);$("adjustedDcrOut").textContent=fmt(s.adjustedDcr,3);$("capacityOut").textContent=fmt(s.capacity,2);
+    metricClass("metricM",s.valid?"ok":"fail");metricClass("metricRaw",s.valid?(s.rawDcr<=s.m?"ok":"warn"):"fail");metricClass("metricAdjusted",s.valid?(s.pass?"ok":"fail"):"fail");metricClass("metricCapacity",s.valid?(s.pass?"ok":"warn"):"fail");
+    const summary=$("summary");summary.className=`summary ${!s.valid?"fail":s.pass?"ok":"warn"}`;
+    $("summaryTitle").textContent=!s.valid?"INPUT / SCOPE REVIEW":s.pass?`PASS - m = ${fmt(s.m,3)}`:`NOT ACCEPTABLE - m = ${fmt(s.m,3)}`;
+    $("summaryText").textContent=!s.valid?s.errors.join("; "):`${s.title}: raw DCR ${fmt(s.rawDcr,3)} ${s.rawDcr<=s.m?"≤":"&gt;"} m ${fmt(s.m,3)}; adjusted D/C = ${fmt(s.adjustedDcr,3)}.`;
+    $("traceBody").innerHTML=[
+      ["Procedure",s.procedure,s.procedure==="LSP"||s.procedure==="LDP"?status("ok","LINEAR"):status("fail","NO m")],
+      ["Component",s.component.toUpperCase(),s.table],
+      ["Performance / role",targetLabel[s.target],"Selects table column"],
+      ["Knowledge factor κ",fmt(s.k,2),"Applied separately from m"],
+      ["Interpolation",s.detail,"Values held at table endpoints outside listed ranges"]
+    ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+    $("candidateBody").innerHTML=s.candidates.map(x=>`<tr><td>${esc(x.name)}</td><td class="num"><b>${fmt(x.m,3)}</b></td><td>${x.basis}</td></tr>`).join("")||`<tr><td colspan="3">No applicable candidate.</td></tr>`;
+    $("interpolationText").innerHTML=s.detail;
+    $("chartLabel").textContent=`D/C = ${fmt(s.adjustedDcr,3)}`;
+    const pct=Number.isFinite(s.adjustedDcr)?Math.max(0,Math.min(100,s.adjustedDcr/1.5*100)):0;$("dcFill").style.width=`${pct}%`;$("dcFill").className=`fill ${s.adjustedDcr>1?"fail":""}`;
+    const notice=$("capacityNotice");notice.className=`notice ${!s.valid?"fail":s.pass?"good":"warn"}`;
+    notice.innerHTML=!s.valid?`<b>Review required:</b> ${esc(s.errors.join("; "))}.`:s.pass?`<b>PASS:</b> mκQ<sub>CE</sub> = ${fmt(s.capacity,2)} ≥ Q<sub>UD</sub> = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} ≤ m = ${fmt(s.m,3)}.`:`<b>NOT ACCEPTABLE:</b> mκQ<sub>CE</sub> = ${fmt(s.capacity,2)} &lt; Q<sub>UD</sub> = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} &gt; m = ${fmt(s.m,3)}.`;
+    $("equationList").innerHTML=[
+      ["Expected strength",`Q<sub>CE</sub> = <b>${fmt(s.qce,3)}</b>`],
+      ["Knowledge-adjusted",`κQ<sub>CE</sub> = ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.k*s.qce,3)}</b>`],
+      ["Raw DCR",`Q<sub>UD</sub> / (κQ<sub>CE</sub>) = ${fmt(s.qud,3)} / ${fmt(s.k*s.qce,3)} = <b>${fmt(s.rawDcr,4)}</b>`],
+      ["m-factor",`m = <b>${fmt(s.m,4)}</b> from ${s.table}`],
+      ["Modified capacity",`mκQ<sub>CE</sub> = ${fmt(s.m,4)} × ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.capacity,3)}</b>`],
+      ["Adjusted D/C",`Q<sub>UD</sub> / (mκQ<sub>CE</sub>) = ${fmt(s.qud,3)} / ${fmt(s.capacity,3)} = <b>${fmt(s.adjustedDcr,4)}</b>`]
+    ].map(e=>`<div class="eq"><b>${e[0]}</b><span>${e[1]}</span></div>`).join("");
+    $("presentStatus").textContent=!s.valid?"REVIEW":s.pass?"PASS":"NOT ACCEPTABLE";$("presentNarrative").textContent=!s.valid?s.errors.join("; "):`${s.title}: ${s.table} gives m = ${fmt(s.m,3)}. With κ = ${fmt(s.k,2)}, modified capacity is ${fmt(s.capacity,2)} versus demand ${fmt(s.qud,2)}.`;
+    $("presentDecision").className=`decision ${!s.valid||!s.pass?"fail":"ok"}`;$("sumM").textContent=fmt(s.m,3);$("sumCapacity").textContent=fmt(s.capacity,2);$("sumDcr").textContent=fmt(s.adjustedDcr,3);
+    $("summaryInputsBody").innerHTML=[
+      ["Calculation",esc(s.title)],["Edition","ASCE/SEI 41-17"],["Procedure",s.procedure],["Component",s.component],["Performance / role",targetLabel[s.target]],["Table",s.table],["Governing basis",s.detail]
+    ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+    $("summaryCriteriaBody").innerHTML=[
+      ["m-factor",fmt(s.m,3),s.table],["κ",fmt(s.k,2),"Section 6.2.4 input"],["QCE",fmt(s.qce,2),"expected strength"],["QUD",fmt(s.qud,2),"linear demand"],["Raw DCR",fmt(s.rawDcr,3),`${fmt(s.rawDcr,3)} ${s.rawDcr<=s.m?"≤":"&gt;"} m`],["Adjusted D/C",fmt(s.adjustedDcr,3),s.valid?(s.pass?status("ok","PASS"):status("fail","FAIL")):status("warn","REVIEW")]
+    ].map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+  }
+
+  function setComponentPanels(){
+    const c=$("component").value;["beam","column","joint"].forEach(x=>$(x+"Panel").classList.toggle("active",x===c));calculate();
+  }
+  function summaryText(){
+    const s=state;return `${s.title}\nRC m-Factor Calculator - ASCE/SEI 41-17\nProcedure: ${s.procedure}; component: ${s.component}; target: ${targetLabel[s.target]}.\nBasis: ${s.table}; ${s.detail.replace(/<[^>]*>/g,"")}\nm = ${fmt(s.m,3)}; κ = ${fmt(s.k,2)}; QCE = ${fmt(s.qce,2)}; QUD = ${fmt(s.qud,2)}; mκQCE = ${fmt(s.capacity,2)}; adjusted D/C = ${fmt(s.adjustedDcr,3)}.\nStatus: ${!s.valid?"REVIEW":s.pass?"PASS":"NOT ACCEPTABLE"}.\nLimit: linear RC moment-frame acceptance only; nonlinear procedures require the applicable modeling and deformation criteria, not m.`;
+  }
+  async function copyText(text,button){try{await navigator.clipboard.writeText(text);const old=button.textContent;button.textContent="Copied";setTimeout(()=>button.textContent=old,1200)}catch{window.prompt("Copy this text:",text)}}
+  document.querySelectorAll("input,select").forEach(el=>{if(!["projectName","preparedBy","checkedBy","revision","calcDate"].includes(el.id))el.addEventListener("input",el.id==="component"?setComponentPanels:calculate)});
+  $("resetBtn").addEventListener("click",()=>{Object.entries(defaults).forEach(([id,value])=>{const el=$(id);if(el.type==="checkbox")el.checked=value;else el.value=value});setComponentPanels()});
+  $("copyBtn").addEventListener("click",e=>copyText(summaryText(),e.currentTarget));
+  $("presentBtn").addEventListener("click",async e=>{document.body.classList.toggle("presenting");try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{}e.currentTarget.textContent=document.body.classList.contains("presenting")?"Exit present":"Present"});
+  document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement){document.body.classList.remove("presenting");$("presentBtn").textContent="Present"}});
+  document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===btn));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.dataset.page===btn.dataset.pageTarget));window.scrollTo({top:0,behavior:"smooth"})}));
+  document.addEventListener("keydown",e=>{if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName))return;if(!["ArrowLeft","ArrowRight"].includes(e.key))return;const tabs=[...document.querySelectorAll(".tab")],current=tabs.findIndex(x=>x.classList.contains("active"));tabs[(current+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length].click()});
+  setComponentPanels();
+})();
+</script>
+</body>
+</html>
