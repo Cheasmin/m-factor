@@ -48,6 +48,7 @@
   .inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   label{display:flex;flex-direction:column;gap:4px;color:#574d2f;font-size:11.5px}label.wide{grid-column:1/-1}
   input[type="number"],input[type="text"],select{width:100%;height:36px;border:1px solid #d6bd6c;border-radius:5px;background:#fffefa;color:var(--ink);padding:0 9px}
+  input[readonly],select:disabled{background:#f3f0e5;color:#5f573e;border-color:#ddd1aa;opacity:1}
   input:focus,select:focus{outline:3px solid #fff0ad;border-color:var(--green-700)}
   .unit{position:relative}.unit input{padding-right:58px}.unit span{position:absolute;right:9px;bottom:8px;color:var(--muted);font-size:11px;pointer-events:none}
   .hint{font-size:11px;color:var(--muted);margin-top:7px}.tiny{font-size:10.5px;color:var(--muted)}
@@ -73,7 +74,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">RC m-Factor Calculator<small>ASCE/SEI 41-17 · linear procedures · Rev 0</small></div>
+  <div class="brand">RC m-Factor Calculator<small>ASCE/SEI 41-17 · linear procedures · Rev 1</small></div>
   <nav class="tabs" aria-label="Calculator pages">
     <button class="tab active" data-page-target="calculator">1 Component &amp; result</button>
     <button class="tab" data-page-target="application">2 Capacity application</button>
@@ -93,7 +94,7 @@
       <div class="hero-copy">
         <div class="eyebrow">Existing RC moment frames</div>
         <h1>Select and interpolate the ASCE 41 m-factor</h1>
-        <p>For linear static or linear dynamic evaluation of reinforced-concrete beam-column moment frames. The engine implements ASCE/SEI 41-17 Tables 10-10a, 10-10b, 10-13, and 10-14, including interpolation and the governing-minimum rule.</p>
+        <p>For linear static or linear dynamic evaluation of reinforced-concrete beam-column moment frames. The engine implements ASCE/SEI 41-17 Tables 10-10a, 10-10b, 10-13, and 10-14, including interpolation and the governing-minimum rule. For rectangular RC beams, expected flexural strength M<sub>CE</sub> is calculated directly from section and reinforcement inputs.</p>
         <div class="notice warn"><b>Procedure boundary:</b> m-factors apply only to deformation-controlled actions evaluated by linear procedures. Nonlinear procedures require the applicable modeling parameters and deformation acceptance criteria; m is not used as a strength multiplier.</div>
       </div>
       <aside class="scope-card">
@@ -101,6 +102,7 @@
         <h2 style="margin-top:8px">Verified scope</h2>
         <ul>
           <li>RC beams: Table 10-13</li>
+          <li>Beam M<sub>CE</sub>: Sections 10.3.2.2 and 10.3.3</li>
           <li>RC columns: Tables 10-10a and 10-10b</li>
           <li>RC beam-column joints: Table 10-14</li>
           <li>Linear acceptance: Section 7.5.2.2.1</li>
@@ -131,13 +133,34 @@
             <label class="check-row"><input id="modeDevelopment" type="checkbox"><span><b>Inadequate development / splice along span</b>Uses stirrup spacing relative to effective depth.</span></label>
             <label class="check-row"><input id="modeEmbedment" type="checkbox"><span><b>Inadequate embedment into beam-column joint</b>Uses the fixed row in Table 10-13.</span></label>
           </div>
-          <div class="inputs" style="margin-top:10px">
-            <label><span>(ρ - ρ') / ρ<sub>bal</sub></span><input id="beamRhoRatio" type="number" step="0.01" value="0.00"></label>
-            <label><span>Metric normalized shear</span><input id="beamShearRatio" type="number" step="0.01" value="0.25"></label>
-            <label><span>Transverse reinforcement</span><select id="beamTransverse"><option value="C" selected>C - conforming</option><option value="NC">NC - nonconforming</option></select></label>
-            <label><span>Stirrup spacing condition</span><select id="beamStirrup"><option value="tight" selected>s ≤ d/2</option><option value="loose">s &gt; d/2</option></select></label>
+          <div class="card-title" style="margin-top:14px"><h3>Automatic expected flexural strength</h3><small>rectangular beam section</small></div>
+          <div class="inputs">
+            <label class="wide"><span>Expected-strength source</span><select id="beamCapacityMode"><option value="auto" selected>Automatic MCE from section and reinforcement</option><option value="manual">Manual QCE input for cases outside the automatic scope</option></select></label>
+            <label><span>Web width, b<sub>w</sub></span><div class="unit"><input id="beamB" type="number" min="1" step="10" value="300"><span>mm</span></div></label>
+            <label><span>Total depth, h</span><div class="unit"><input id="beamH" type="number" min="1" step="10" value="500"><span>mm</span></div></label>
+            <label><span>Clear cover</span><div class="unit"><input id="beamCover" type="number" min="0" step="5" value="40"><span>mm</span></div></label>
+            <label><span>Stirrup diameter</span><div class="unit"><input id="beamStirrupDia" type="number" min="1" step="1" value="10"><span>mm</span></div></label>
+            <label><span>Tension bars, count</span><input id="beamNTension" type="number" min="1" step="1" value="3"></label>
+            <label><span>Tension-bar diameter</span><div class="unit"><input id="beamDTension" type="number" min="1" step="1" value="20"><span>mm</span></div></label>
+            <label><span>Compression bars, count</span><input id="beamNCompression" type="number" min="0" step="1" value="2"></label>
+            <label><span>Compression-bar diameter</span><div class="unit"><input id="beamDCompression" type="number" min="1" step="1" value="16"><span>mm</span></div></label>
+            <label><span>Expected concrete f'<sub>cE</sub></span><div class="unit"><input id="beamFcE" type="number" min="1" step="1" value="28"><span>MPa</span></div></label>
+            <label><span>Expected longitudinal steel f<sub>yE</sub></span><div class="unit"><input id="beamFyE" type="number" min="1" step="10" value="420"><span>MPa</span></div></label>
+            <label><span>Steel modulus, E<sub>s</sub></span><div class="unit"><input id="beamEs" type="number" min="1" step="1000" value="200000"><span>MPa</span></div></label>
+            <label><span>Expected stirrup steel f<sub>ytE</sub></span><div class="unit"><input id="beamFytE" type="number" min="1" step="10" value="420"><span>MPa</span></div></label>
+            <label><span>Stirrup legs</span><input id="beamStirrupLegs" type="number" min="1" step="1" value="2"></label>
+            <label><span>Stirrup spacing, s</span><div class="unit"><input id="beamStirrupSpacing" type="number" min="1" step="10" value="100"><span>mm</span></div></label>
+            <label class="wide"><span>Beam shear demand, V</span><div class="unit"><input id="beamVu" type="number" min="0" step="5" value="150"><span>kN</span></div></label>
           </div>
-          <p class="hint">Metric normalized shear = V / (b<sub>w</sub>d√f'<sub>cE</sub>), using the MPa thresholds 0.25 and 0.50 shown parenthetically in Table 10-13. Values between table limits are linearly interpolated.</p>
+          <div id="beamSectionSummary" class="notice" style="margin-top:12px">Enter the beam section, reinforcement, and expected material properties.</div>
+          <div class="card-title" style="margin-top:14px"><h3>Derived Table 10-13 parameters</h3><small>calculated automatically</small></div>
+          <div class="inputs" style="margin-top:10px">
+            <label><span>(ρ - ρ') / ρ<sub>bal</sub></span><input id="beamRhoRatio" type="number" step="0.001" value="0.00" readonly></label>
+            <label><span>V / (b<sub>w</sub>d√f'<sub>cE</sub>)</span><input id="beamShearRatio" type="number" step="0.001" value="0.25" readonly></label>
+            <label><span>Transverse reinforcement</span><select id="beamTransverse" disabled><option value="C" selected>C - conforming</option><option value="NC">NC - nonconforming</option></select></label>
+            <label><span>Stirrup spacing condition</span><select id="beamStirrup" disabled><option value="tight" selected>s ≤ d/2</option><option value="loose">s &gt; d/2</option></select></label>
+          </div>
+          <p class="hint">The automatic M<sub>CE</sub> calculation uses expected material properties, strain compatibility, and φ = 1.0. It is limited to a rectangular nonprestressed beam with one tension-steel layer and one optional compression-steel layer. Use manual Q<sub>CE</sub> for flanged sections, development-limited strength, or other conditions outside this scope.</p>
         </section>
 
         <section id="columnPanel" class="card component-panel">
@@ -208,8 +231,8 @@
         <section class="card">
           <div class="card-title"><h2><span class="section-no">03</span>Demand and expected strength</h2><small>consistent force units</small></div>
           <div class="inputs">
-            <label><span>Expected strength, Q<sub>CE</sub></span><div class="unit"><input id="qce" type="number" min="0" step="1" value="100"><span>units</span></div></label>
-            <label><span>Deformation-controlled demand, Q<sub>UD</sub></span><div class="unit"><input id="qud" type="number" min="0" step="1" value="180"><span>units</span></div></label>
+            <label><span id="qceLabel">Expected strength, Q<sub>CE</sub></span><div class="unit"><input id="qce" type="number" min="0" step="1" value="100"><span id="qceUnit">units</span></div></label>
+            <label><span id="qudLabel">Deformation-controlled demand, Q<sub>UD</sub></span><div class="unit"><input id="qud" type="number" min="0" step="1" value="180"><span id="qudUnit">units</span></div></label>
           </div>
           <div id="capacityNotice" class="notice" style="margin-top:12px">-</div>
         </section>
@@ -223,9 +246,9 @@
           <h2>Workflow</h2>
           <div class="flow">
             <div class="flow-item"><b>1 Classify action</b><span>Confirm deformation-controlled behavior and LSP/LDP use.</span></div>
-            <div class="flow-item"><b>2 Select m</b><span>Use the applicable component table and interpolate.</span></div>
-            <div class="flow-item"><b>3 Apply κ</b><span>Use the component-specific knowledge factor from data collection.</span></div>
-            <div class="flow-item"><b>4 Compare</b><span>Check QUD against mκQCE and document the governing row.</span></div>
+            <div class="flow-item"><b>2 Calculate beam M<sub>CE</sub></b><span>Use section geometry, reinforcement, and expected material strengths.</span></div>
+            <div class="flow-item"><b>3 Select m and apply κ</b><span>Use the applicable component table and the approved knowledge factor.</span></div>
+            <div class="flow-item"><b>4 Compare</b><span>Check MUD against mκMCE for beam flexure and document the governing row.</span></div>
           </div>
         </section>
         <section class="card">
@@ -251,6 +274,8 @@
       <table class="ref-table"><thead><tr><th>Reference</th><th>Use in this calculator</th><th>Vault PDF location</th></tr></thead><tbody>
         <tr><td>ASCE 41-17 §7.5.1.5.2</td><td>Linear deformation-controlled capacity is the product of m, κ, and Q<sub>CE</sub>.</td><td>PDF p. 125; printed p. 78</td></tr>
         <tr><td>ASCE 41-17 §7.5.2.2.1 / Eq. 7-36</td><td>Acceptance check mκQ<sub>CE</sub> &gt; Q<sub>UD</sub>.</td><td>PDF p. 126; printed p. 79</td></tr>
+        <tr><td>ASCE 41-17 §10.3.2.2</td><td>Expected strength Q<sub>CE</sub> for deformation-controlled concrete actions; ACI 318 strength procedures are permitted with φ = 1.0 unless otherwise specified.</td><td>PDF p. 195; printed p. 148</td></tr>
+        <tr><td>ASCE 41-17 §10.3.3</td><td>Flexural strength is calculated using ACI 318 or another demonstrated rational sectional-analysis method, including available reinforcement development.</td><td>PDF p. 195; printed p. 148</td></tr>
         <tr><td>ASCE 41-17 Table 10-10a</td><td>Noncircular RC column m-factors; linear interpolation.</td><td>PDF p. 202; printed p. 155</td></tr>
         <tr><td>ASCE 41-17 Table 10-10b</td><td>Qualifying circular RC column m-factors; linear interpolation.</td><td>PDF p. 203; printed p. 156</td></tr>
         <tr><td>ASCE 41-17 Table 10-13</td><td>RC beam m-factors; minimum applicable condition governs.</td><td>PDF p. 205; printed p. 158</td></tr>
@@ -259,8 +284,8 @@
       </tbody></table>
     </section>
     <div class="source-box" style="margin-top:14px">
-      <section class="card"><h2>Verified facts</h2><ul><li>m is a linear-procedure component capacity modification factor.</li><li>Beam Table 10-13 requires the minimum applicable value when multiple listed conditions occur.</li><li>Table notes require linear interpolation between listed values.</li><li>Column development/splice-controlled values cannot exceed the corresponding non-development-controlled values.</li></ul></section>
-      <section class="card"><h2>Assumptions / limitations</h2><ul><li>Metric beam normalized-shear thresholds use the parenthetical MPa values 0.25 and 0.50.</li><li>Inputs outside table endpoints are held at the applicable endpoint; extrapolation is not performed.</li><li>Component/action classification, expected strength, κ, and demands remain the engineer's responsibility.</li><li>ASCE 41-23 is the current ASCE edition, but this tool is intentionally locked to the indexed 41-17 PDF and must not be treated as a 41-23 implementation.</li></ul></section>
+      <section class="card"><h2>Verified facts</h2><ul><li>m is a linear-procedure component capacity modification factor.</li><li>Beam Table 10-13 requires the minimum applicable value when multiple listed conditions occur.</li><li>Table notes require linear interpolation between listed values.</li><li>For deformation-controlled concrete actions, expected strength may be calculated using ACI 318 procedures with φ = 1.0 unless ASCE 41 specifies otherwise.</li><li>Column development/splice-controlled values cannot exceed the corresponding non-development-controlled values.</li></ul></section>
+      <section class="card"><h2>Assumptions / limitations</h2><ul><li>The automatic beam M<sub>CE</sub> module is limited to a rectangular nonprestressed section with one tension-steel layer and one optional compression-steel layer.</li><li>Automatic M<sub>CE</sub> assumes the entered longitudinal reinforcement can develop its expected stress; development-limited cases require a separately derived manual Q<sub>CE</sub>.</li><li>Metric beam normalized-shear thresholds use the parenthetical MPa values 0.25 and 0.50.</li><li>Inputs outside table endpoints are held at the applicable endpoint; extrapolation is not performed.</li><li>κ and analysis demands remain independent project inputs.</li><li>ASCE 41-23 is the current ASCE edition, but this tool is intentionally locked to the indexed 41-17 PDF and must not be treated as a 41-23 implementation.</li></ul></section>
     </div>
     <section class="card" style="margin-top:14px">
       <h2>NSCP and related references</h2>
@@ -302,7 +327,7 @@
       <section class="card" style="overflow:auto"><div class="card-title"><h2>Selection record</h2><small>live</small></div><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody id="summaryInputsBody"></tbody></table></section>
       <section class="card" style="overflow:auto"><div class="card-title"><h2>Acceptance record</h2><small>live</small></div><table><thead><tr><th>Quantity</th><th class="num">Value</th><th>Status / basis</th></tr></thead><tbody id="summaryCriteriaBody"></tbody></table></section>
     </div>
-    <section class="card" style="margin-top:14px"><h2>Reviewer close-out</h2><div class="source-box"><div><h3>Confirm before issue</h3><ul><li>Correct ASCE 41 edition and adopted Performance Objective.</li><li>Component is deformation controlled and within the selected table scope.</li><li>κ, Q<sub>CE</sub>, Q<sub>UD</sub>, and limit-state actions are independently supported.</li></ul></div><div><h3>Items outside this calculator</h3><ul><li>Nonlinear component modeling and cyclic degradation.</li><li>Nonlinear deformation acceptance limits.</li><li>Force-controlled actions and complete load-path checks.</li></ul></div></div></section>
+    <section class="card" style="margin-top:14px"><h2>Reviewer close-out</h2><div class="source-box"><div><h3>Confirm before issue</h3><ul><li>Correct ASCE 41 edition and adopted Performance Objective.</li><li>Component is deformation controlled and within the selected table scope.</li><li>Beam section, reinforcement, expected material properties, κ, analysis demands, and limit-state actions are independently supported.</li></ul></div><div><h3>Items outside this calculator</h3><ul><li>Nonlinear component modeling and cyclic degradation.</li><li>Nonlinear deformation acceptance limits.</li><li>Force-controlled actions and complete load-path checks.</li></ul></div></div></section>
   </section>
 </main>
 
@@ -316,7 +341,9 @@
   const targetLabel = {PIO:"Primary - Immediate Occupancy",PLS:"Primary - Life Safety",PCP:"Primary - Collapse Prevention",SLS:"Secondary - Life Safety",SCP:"Secondary - Collapse Prevention"};
   const defaults = {
     titleInput:"Existing RC frame component",procedure:"LSP",component:"beam",target:"PLS",kappa:"1",
-    modeFlexure:true,modeShear:false,modeDevelopment:false,modeEmbedment:false,beamRhoRatio:"0.00",beamShearRatio:"0.25",beamTransverse:"C",beamStirrup:"tight",
+    modeFlexure:true,modeShear:false,modeDevelopment:false,modeEmbedment:false,
+    beamCapacityMode:"auto",beamB:"300",beamH:"500",beamCover:"40",beamStirrupDia:"10",beamNTension:"3",beamDTension:"20",beamNCompression:"2",beamDCompression:"16",beamFcE:"28",beamFyE:"420",beamEs:"200000",beamFytE:"420",beamStirrupLegs:"2",beamStirrupSpacing:"100",beamVu:"150",
+    beamRhoRatio:"0.00",beamShearRatio:"0.25",beamTransverse:"C",beamStirrup:"tight",
     columnShape:"other",columnDevelopment:"no",columnAxial:"0.10",columnRho:"0.0175",columnShear:"0.20",
     jointClass:"interior",jointTransverse:"C",jointAxial:"0.10",jointShear:"1.20",qce:"100",qud:"180"
   };
@@ -391,6 +418,49 @@
     return {m:mix(low,high,t),detail:`Other joint, nonconforming reinforcement: axial interpolation at P/(Agf'cE)=${fmt(n,3)} between 0.10 and 0.40.`};
   }
 
+  function beta1Expected(fc){
+    if(fc<=28)return .85;
+    if(fc>=55)return .65;
+    return .85-.05*(fc-28)/7;
+  }
+
+  function solveBeamSection(){
+    const v={
+      b:num("beamB"),h:num("beamH"),cover:num("beamCover"),dst:num("beamStirrupDia"),
+      nT:Math.round(num("beamNTension")),dbT:num("beamDTension"),nC:Math.round(num("beamNCompression")),dbC:num("beamDCompression"),
+      fc:num("beamFcE"),fy:num("beamFyE"),Es:num("beamEs"),fyt:num("beamFytE"),
+      legs:Math.round(num("beamStirrupLegs")),s:num("beamStirrupSpacing"),Vu:num("beamVu")
+    };
+    const errors=[];
+    ["b","h","dbT","fc","fy","Es","fyt","s"].forEach(k=>{if(!(v[k]>0))errors.push(`${k} must be greater than zero`)});
+    if(v.nT<1)errors.push("at least one tension bar is required");
+    if(v.nC<0)errors.push("compression-bar count cannot be negative");
+    if(v.nC>0&&!(v.dbC>0))errors.push("compression-bar diameter must be greater than zero");
+    if(v.legs<1)errors.push("at least one stirrup leg is required");
+    if(v.cover<0||v.Vu<0)errors.push("cover and shear demand cannot be negative");
+    const d=v.h-v.cover-v.dst-v.dbT/2,dp=v.cover+v.dst+(v.nC>0?v.dbC/2:0);
+    if(!(d>0&&d<v.h))errors.push("effective depth is outside the section");
+    if(v.nC>0&&!(dp>0&&dp<d))errors.push("compression-steel depth must be above the tension steel");
+    const As=v.nT*Math.PI*v.dbT*v.dbT/4,AsP=v.nC*Math.PI*v.dbC*v.dbC/4,beta=beta1Expected(v.fc);
+    if(errors.length)return {...v,d,dp,As,AsP,beta,errors,valid:false};
+    const steel=x=>clamp(v.Es*x,-v.fy,v.fy);
+    const forces=c=>{
+      const a=beta*c,Cc=.85*v.fc*v.b*a,fsT=steel(.003*(d-c)/c),fsC=AsP?steel(.003*(c-dp)/c):0;
+      const CsNet=AsP*(fsC-(dp<=a?.85*v.fc:0));
+      return {a,Cc,fsT,fsC,CsNet,residual:Cc+CsNet-As*fsT};
+    };
+    let lo=.01,hi=Math.max(v.h*2,d*2),flo=forces(lo).residual,fhi=forces(hi).residual;
+    for(let i=0;i<12&&flo*fhi>0;i++){hi*=2;fhi=forces(hi).residual}
+    if(flo*fhi>0)return {...v,d,dp,As,AsP,beta,errors:["section equilibrium could not be bracketed"],valid:false};
+    for(let i=0;i<100;i++){const mid=(lo+hi)/2,fm=forces(mid).residual;if(flo*fm<=0){hi=mid;fhi=fm}else{lo=mid;flo=fm}}
+    const c=(lo+hi)/2,f=forces(c),Mn=(As*f.fsT*d-f.Cc*f.a/2-f.CsNet*dp)/1e6;
+    const epsY=v.fy/v.Es,rho=As/(v.b*d),rhoP=AsP/(v.b*d),rhoBal=.85*beta*v.fc/v.fy*(.003/(.003+epsY));
+    const rhoRatio=(rho-rhoP)/rhoBal,shearRatio=v.Vu*1000/(v.b*d*Math.sqrt(v.fc));
+    const Av=v.legs*Math.PI*v.dst*v.dst/4,Vs=Av*v.fyt*d/v.s/1000;
+    if(!(c>0&&c<d&&f.a<d&&f.fsT>0&&Mn>0))errors.push("section is outside the verified positive-flexure solution range");
+    return {...v,d,dp,As,AsP,beta,c,a:f.a,fsT:f.fsT,fsC:f.fsC,Mn,mce:Mn,epsY,rho,rhoP,rhoBal,rhoRatio,shearRatio,Av,Vs,errors,valid:errors.length===0};
+  }
+
   function calculateSelection(){
     const target=$("target").value,ti=targetIndex[target],component=$("component").value,procedure=$("procedure").value;
     const candidates=[];let detail="",table="",errors=[];
@@ -423,50 +493,80 @@
   }
 
   function calculate(){
-    const sel=calculateSelection(),k=num("kappa"),qce=num("qce"),qud=num("qud"),errors=[...sel.errors];
-    if(!(qce>0))errors.push("QCE must be greater than zero");if(qud<0)errors.push("QUD cannot be negative");
+    const component=$("component").value,k=num("kappa"),qud=num("qud"),beamSection=solveBeamSection();
+    const autoBeam=component==="beam"&&$("beamCapacityMode").value==="auto";
+    let qce=autoBeam?beamSection.mce:num("qce"),preErrors=[];
+    if(component==="beam"){
+      if(beamSection.valid){
+        $("beamRhoRatio").value=beamSection.rhoRatio.toFixed(4);
+        $("beamShearRatio").value=beamSection.shearRatio.toFixed(4);
+      }else preErrors.push(...beamSection.errors);
+      if(autoBeam&&beamSection.valid)$("qce").value=beamSection.mce.toFixed(3);
+      if(autoBeam&&!$("modeFlexure").checked)preErrors.push("automatic MCE requires the flexure-controlled beam condition");
+      if(autoBeam&&($("modeDevelopment").checked||$("modeEmbedment").checked))preErrors.push("automatic MCE assumes developed longitudinal reinforcement; use manual QCE for development/splice or embedment-controlled strength");
+      const rawForDetail=qce>0&&k>0?qud/(k*qce):Infinity,moderateHigh=rawForDetail>=2;
+      const transverse=beamSection.valid&&beamSection.s<=beamSection.d/3&&(!moderateHigh||beamSection.Vs>=.75*beamSection.Vu)?"C":"NC";
+      $("beamTransverse").value=transverse;
+      $("beamStirrup").value=beamSection.valid&&beamSection.s<=beamSection.d/2?"tight":"loose";
+    }
+    $("qce").readOnly=autoBeam;
+    $("qceLabel").innerHTML=autoBeam?"Expected flexural strength, M<sub>CE</sub> (automatic)":"Expected strength, Q<sub>CE</sub>";
+    $("qudLabel").innerHTML=component==="beam"?"Flexural demand, M<sub>UD</sub>":"Deformation-controlled demand, Q<sub>UD</sub>";
+    $("qceUnit").textContent=component==="beam"?"kN·m":"units";$("qudUnit").textContent=component==="beam"?"kN·m":"units";
+    const sel=calculateSelection(),errors=[...sel.errors,...preErrors];
+    if(!(qce>0))errors.push(`${component==="beam"?"MCE":"QCE"} must be greater than zero`);if(qud<0)errors.push(`${component==="beam"?"MUD":"QUD"} cannot be negative`);
     const capacity=sel.m*k*qce,rawDcr=qud/(k*qce),adjustedDcr=qud/capacity;
     const valid=errors.length===0&&Number.isFinite(adjustedDcr),pass=valid&&adjustedDcr<=1;
-    Object.assign(state,sel,{k,qce,qud,capacity,rawDcr,adjustedDcr,errors,valid,pass,title:$("titleInput").value.trim()||"Untitled component"});
+    Object.assign(state,sel,{k,qce,qud,capacity,rawDcr,adjustedDcr,errors,valid,pass,beamSection,autoBeam,title:$("titleInput").value.trim()||"Untitled component"});
     render();
   }
 
   function metricClass(id,kind){$(id).className=`metric ${kind}`}
   function render(){
     const s=state;
+    const ceSymbol=s.component==="beam"?"M<sub>CE</sub>":"Q<sub>CE</sub>",udSymbol=s.component==="beam"?"M<sub>UD</sub>":"Q<sub>UD</sub>";
     $("mOut").textContent=fmt(s.m,3);$("tableOut").textContent=s.table;$("rawDcrOut").textContent=fmt(s.rawDcr,3);$("adjustedDcrOut").textContent=fmt(s.adjustedDcr,3);$("capacityOut").textContent=fmt(s.capacity,2);
     metricClass("metricM",s.valid?"ok":"fail");metricClass("metricRaw",s.valid?(s.rawDcr<=s.m?"ok":"warn"):"fail");metricClass("metricAdjusted",s.valid?(s.pass?"ok":"fail"):"fail");metricClass("metricCapacity",s.valid?(s.pass?"ok":"warn"):"fail");
     const summary=$("summary");summary.className=`summary ${!s.valid?"fail":s.pass?"ok":"warn"}`;
     $("summaryTitle").textContent=!s.valid?"INPUT / SCOPE REVIEW":s.pass?`PASS - m = ${fmt(s.m,3)}`:`NOT ACCEPTABLE - m = ${fmt(s.m,3)}`;
     $("summaryText").textContent=!s.valid?s.errors.join("; "):`${s.title}: raw DCR ${fmt(s.rawDcr,3)} ${s.rawDcr<=s.m?"≤":"&gt;"} m ${fmt(s.m,3)}; adjusted D/C = ${fmt(s.adjustedDcr,3)}.`;
-    $("traceBody").innerHTML=[
+    const beamNotice=$("beamSectionSummary"),bs=s.beamSection;
+    beamNotice.className=`notice ${bs.valid?(s.autoBeam?"good":"warn"):"fail"}`;
+    beamNotice.innerHTML=bs.valid
+      ? `<b>${s.autoBeam?"Automatic MCE":"Section classification with manual QCE"}:</b> d = ${fmt(bs.d,1)} mm; As = ${fmt(bs.As,0)} mm²; As' = ${fmt(bs.AsP,0)} mm²; MCE = ${fmt(bs.mce,2)} kN·m; (ρ-ρ')/ρbal = ${fmt(bs.rhoRatio,4)}; normalized shear = ${fmt(bs.shearRatio,4)}; Vs = ${fmt(bs.Vs,1)} kN; transverse class = ${$("beamTransverse").value}.`
+      : `<b>Beam-section review:</b> ${esc(bs.errors.join("; "))}.`;
+    const traceRows=[
       ["Procedure",s.procedure,s.procedure==="LSP"||s.procedure==="LDP"?status("ok","LINEAR"):status("fail","NO m")],
       ["Component",s.component.toUpperCase(),s.table],
       ["Performance / role",targetLabel[s.target],"Selects table column"],
       ["Knowledge factor κ",fmt(s.k,2),"Applied separately from m"],
       ["Interpolation",s.detail,"Values held at table endpoints outside listed ranges"]
-    ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+    ];
+    if(s.component==="beam")traceRows.splice(4,0,["Expected moment strength",`${fmt(s.qce,2)} kN·m`,s.autoBeam?"Automatic rectangular-section analysis; φ = 1.0":"Manual QCE input"],["Derived Table 10-13 inputs",`r = ${fmt(bs.rhoRatio,4)}; v = ${fmt(bs.shearRatio,4)}`,`${$("beamTransverse").value}; s ${$("beamStirrup").value==="tight"?"≤":"&gt;"} d/2`]);
+    $("traceBody").innerHTML=traceRows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
     $("candidateBody").innerHTML=s.candidates.map(x=>`<tr><td>${esc(x.name)}</td><td class="num"><b>${fmt(x.m,3)}</b></td><td>${x.basis}</td></tr>`).join("")||`<tr><td colspan="3">No applicable candidate.</td></tr>`;
     $("interpolationText").innerHTML=s.detail;
     $("chartLabel").textContent=`D/C = ${fmt(s.adjustedDcr,3)}`;
     const pct=Number.isFinite(s.adjustedDcr)?Math.max(0,Math.min(100,s.adjustedDcr/1.5*100)):0;$("dcFill").style.width=`${pct}%`;$("dcFill").className=`fill ${s.adjustedDcr>1?"fail":""}`;
     const notice=$("capacityNotice");notice.className=`notice ${!s.valid?"fail":s.pass?"good":"warn"}`;
-    notice.innerHTML=!s.valid?`<b>Review required:</b> ${esc(s.errors.join("; "))}.`:s.pass?`<b>PASS:</b> mκQ<sub>CE</sub> = ${fmt(s.capacity,2)} ≥ Q<sub>UD</sub> = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} ≤ m = ${fmt(s.m,3)}.`:`<b>NOT ACCEPTABLE:</b> mκQ<sub>CE</sub> = ${fmt(s.capacity,2)} &lt; Q<sub>UD</sub> = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} &gt; m = ${fmt(s.m,3)}.`;
+    notice.innerHTML=!s.valid?`<b>Review required:</b> ${esc(s.errors.join("; "))}.`:s.pass?`<b>PASS:</b> mκ${ceSymbol} = ${fmt(s.capacity,2)} ≥ ${udSymbol} = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} ≤ m = ${fmt(s.m,3)}.`:`<b>NOT ACCEPTABLE:</b> mκ${ceSymbol} = ${fmt(s.capacity,2)} &lt; ${udSymbol} = ${fmt(s.qud,2)}. Raw DCR = ${fmt(s.rawDcr,3)} &gt; m = ${fmt(s.m,3)}.`;
     $("equationList").innerHTML=[
-      ["Expected strength",`Q<sub>CE</sub> = <b>${fmt(s.qce,3)}</b>`],
-      ["Knowledge-adjusted",`κQ<sub>CE</sub> = ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.k*s.qce,3)}</b>`],
-      ["Raw DCR",`Q<sub>UD</sub> / (κQ<sub>CE</sub>) = ${fmt(s.qud,3)} / ${fmt(s.k*s.qce,3)} = <b>${fmt(s.rawDcr,4)}</b>`],
+      [s.component==="beam"?"Expected moment strength":"Expected strength",`${ceSymbol} = <b>${fmt(s.qce,3)}</b>${s.component==="beam"?" kN·m":""}`],
+      ["Knowledge-adjusted",`κ${ceSymbol} = ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.k*s.qce,3)}</b>`],
+      ["Raw DCR",`${udSymbol} / (κ${ceSymbol}) = ${fmt(s.qud,3)} / ${fmt(s.k*s.qce,3)} = <b>${fmt(s.rawDcr,4)}</b>`],
       ["m-factor",`m = <b>${fmt(s.m,4)}</b> from ${s.table}`],
-      ["Modified capacity",`mκQ<sub>CE</sub> = ${fmt(s.m,4)} × ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.capacity,3)}</b>`],
-      ["Adjusted D/C",`Q<sub>UD</sub> / (mκQ<sub>CE</sub>) = ${fmt(s.qud,3)} / ${fmt(s.capacity,3)} = <b>${fmt(s.adjustedDcr,4)}</b>`]
+      ["Modified capacity",`mκ${ceSymbol} = ${fmt(s.m,4)} × ${fmt(s.k,3)} × ${fmt(s.qce,3)} = <b>${fmt(s.capacity,3)}</b>`],
+      ["Adjusted D/C",`${udSymbol} / (mκ${ceSymbol}) = ${fmt(s.qud,3)} / ${fmt(s.capacity,3)} = <b>${fmt(s.adjustedDcr,4)}</b>`]
     ].map(e=>`<div class="eq"><b>${e[0]}</b><span>${e[1]}</span></div>`).join("");
     $("presentStatus").textContent=!s.valid?"REVIEW":s.pass?"PASS":"NOT ACCEPTABLE";$("presentNarrative").textContent=!s.valid?s.errors.join("; "):`${s.title}: ${s.table} gives m = ${fmt(s.m,3)}. With κ = ${fmt(s.k,2)}, modified capacity is ${fmt(s.capacity,2)} versus demand ${fmt(s.qud,2)}.`;
     $("presentDecision").className=`decision ${!s.valid||!s.pass?"fail":"ok"}`;$("sumM").textContent=fmt(s.m,3);$("sumCapacity").textContent=fmt(s.capacity,2);$("sumDcr").textContent=fmt(s.adjustedDcr,3);
-    $("summaryInputsBody").innerHTML=[
+    const summaryInputs=[
       ["Calculation",esc(s.title)],["Edition","ASCE/SEI 41-17"],["Procedure",s.procedure],["Component",s.component],["Performance / role",targetLabel[s.target]],["Table",s.table],["Governing basis",s.detail]
-    ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+    ];
+    if(s.component==="beam")summaryInputs.splice(5,0,["Beam section",`${fmt(bs.b,0)} × ${fmt(bs.h,0)} mm; d = ${fmt(bs.d,1)} mm`],["Longitudinal steel",`As = ${fmt(bs.As,0)} mm²; As' = ${fmt(bs.AsP,0)} mm²`],["Expected materials",`f'cE = ${fmt(bs.fc,1)} MPa; fyE = ${fmt(bs.fy,0)} MPa`]);
+    $("summaryInputsBody").innerHTML=summaryInputs.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
     $("summaryCriteriaBody").innerHTML=[
-      ["m-factor",fmt(s.m,3),s.table],["κ",fmt(s.k,2),"Section 6.2.4 input"],["QCE",fmt(s.qce,2),"expected strength"],["QUD",fmt(s.qud,2),"linear demand"],["Raw DCR",fmt(s.rawDcr,3),`${fmt(s.rawDcr,3)} ${s.rawDcr<=s.m?"≤":"&gt;"} m`],["Adjusted D/C",fmt(s.adjustedDcr,3),s.valid?(s.pass?status("ok","PASS"):status("fail","FAIL")):status("warn","REVIEW")]
+      ["m-factor",fmt(s.m,3),s.table],["κ",fmt(s.k,2),"Section 6.2.4 input"],[s.component==="beam"?"MCE":"QCE",fmt(s.qce,2),s.component==="beam"?(s.autoBeam?"automatic expected moment strength":"manual expected strength"):"expected strength"],[s.component==="beam"?"MUD":"QUD",fmt(s.qud,2),"linear demand"],["Raw DCR",fmt(s.rawDcr,3),`${fmt(s.rawDcr,3)} ${s.rawDcr<=s.m?"≤":"&gt;"} m`],["Adjusted D/C",fmt(s.adjustedDcr,3),s.valid?(s.pass?status("ok","PASS"):status("fail","FAIL")):status("warn","REVIEW")]
     ].map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td>${r[2]}</td></tr>`).join("");
   }
 
@@ -474,7 +574,9 @@
     const c=$("component").value;["beam","column","joint"].forEach(x=>$(x+"Panel").classList.toggle("active",x===c));calculate();
   }
   function summaryText(){
-    const s=state;return `${s.title}\nRC m-Factor Calculator - ASCE/SEI 41-17\nProcedure: ${s.procedure}; component: ${s.component}; target: ${targetLabel[s.target]}.\nBasis: ${s.table}; ${s.detail.replace(/<[^>]*>/g,"")}\nm = ${fmt(s.m,3)}; κ = ${fmt(s.k,2)}; QCE = ${fmt(s.qce,2)}; QUD = ${fmt(s.qud,2)}; mκQCE = ${fmt(s.capacity,2)}; adjusted D/C = ${fmt(s.adjustedDcr,3)}.\nStatus: ${!s.valid?"REVIEW":s.pass?"PASS":"NOT ACCEPTABLE"}.\nLimit: linear RC moment-frame acceptance only; nonlinear procedures require the applicable modeling and deformation criteria, not m.`;
+    const s=state,ce=s.component==="beam"?"MCE":"QCE",ud=s.component==="beam"?"MUD":"QUD";
+    const section=s.component==="beam"?`\nBeam: ${fmt(s.beamSection.b,0)} x ${fmt(s.beamSection.h,0)} mm; d=${fmt(s.beamSection.d,1)} mm; As=${fmt(s.beamSection.As,0)} mm2; As'=${fmt(s.beamSection.AsP,0)} mm2; f'cE=${fmt(s.beamSection.fc,1)} MPa; fyE=${fmt(s.beamSection.fy,0)} MPa.`:"";
+    return `${s.title}\nRC m-Factor Calculator - ASCE/SEI 41-17\nProcedure: ${s.procedure}; component: ${s.component}; target: ${targetLabel[s.target]}.${section}\nBasis: ${s.table}; ${s.detail.replace(/<[^>]*>/g,"")}\nm = ${fmt(s.m,3)}; κ = ${fmt(s.k,2)}; ${ce} = ${fmt(s.qce,2)}; ${ud} = ${fmt(s.qud,2)}; mκ${ce} = ${fmt(s.capacity,2)}; adjusted D/C = ${fmt(s.adjustedDcr,3)}.\nStatus: ${!s.valid?"REVIEW":s.pass?"PASS":"NOT ACCEPTABLE"}.\nLimit: linear RC moment-frame acceptance only; nonlinear procedures require the applicable modeling and deformation criteria, not m.`;
   }
   async function copyText(text,button){try{await navigator.clipboard.writeText(text);const old=button.textContent;button.textContent="Copied";setTimeout(()=>button.textContent=old,1200)}catch{window.prompt("Copy this text:",text)}}
   document.querySelectorAll("input,select").forEach(el=>{if(!["projectName","preparedBy","checkedBy","revision","calcDate"].includes(el.id))el.addEventListener("input",el.id==="component"?setComponentPanels:calculate)});
